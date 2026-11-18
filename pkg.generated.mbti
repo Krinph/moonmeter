@@ -1,0 +1,132 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Krinph/moonmeter"
+
+// Values
+pub const FrameEnd : Byte = 0x16
+
+pub const FrameStart : Byte = 0x68
+
+pub fn bcd_decode(ArrayView[Byte]) -> Int32
+
+pub fn bcd_encode(Int32, Int32) -> Array[Byte]
+
+pub fn bcd_from(Int32) -> Byte
+
+pub fn bcd_to(Byte) -> Int32
+
+pub fn build_read_request(Array[Byte], DataId) -> Array[Byte]
+
+pub fn build_time_sync(Array[Byte], Int32, Int32) -> Array[Byte]
+
+pub fn decode_energy(Array[Byte], Int32) -> (Int32, Int32)
+
+pub fn decode_frame(Array[Byte]) -> Result[Frame, FrameError]
+
+pub fn di3_decimals(Int32) -> Int32
+
+pub fn di3_len(Int32) -> Int32
+
+pub fn di_active_flat() -> DataId
+
+pub fn di_active_peak() -> DataId
+
+pub fn di_active_peak2() -> DataId
+
+pub fn di_active_total() -> DataId
+
+pub fn di_active_valley() -> DataId
+
+pub fn di_current() -> DataId
+
+pub fn di_power() -> DataId
+
+pub fn di_voltage() -> DataId
+
+pub fn encode_frame(Array[Byte], Byte, Array[Byte]) -> Array[Byte]
+
+pub fn function_code(Byte) -> Int32
+
+pub fn hex_decode(String) -> Array[Byte]?
+
+pub fn hex_encode(ArrayView[Byte]) -> String
+
+pub fn is_error_reply(Byte) -> Bool
+
+pub fn is_reply(Byte) -> Bool
+
+pub fn parse_reading(Array[Byte]) -> Reading?
+
+pub fn render_findings(Array[Finding]) -> String
+
+pub fn split_frames(Array[Byte]) -> (Array[Array[Byte]], Array[Finding])
+
+pub fn validate_frame(Frame) -> Array[Finding]
+
+// Errors
+
+// Types and methods
+pub enum Command {
+  ReadData
+  ReadNextData
+  WriteDataMulti
+  WriteAddress
+  BroadcastTimeSync
+  WriteDataSingle
+  ReadAddress
+  ChangePassword
+  ClearMaxDemand
+  ClearMeter
+  ClearEvents
+  ReadBlocks
+  ReadEvents
+  Freeze
+  ReadVersion
+}
+pub fn Command::value(Self) -> Byte
+
+pub struct DataId {
+  di0 : Int32
+  di1 : Int32
+  di2 : Int32
+  di3 : Int32
+}
+pub fn DataId::new(Int32, Int32, Int32, Int32) -> Self
+
+pub struct Finding {
+  offset : Int32
+  severity : String
+  code : String
+  message : String
+}
+
+pub struct Frame {
+  address : Array[Byte]
+  control : Byte
+  data : Array[Byte]
+}
+
+pub enum FrameError {
+  TooShort
+  BadStart
+  BadEnd
+  BadChecksum
+  LengthMismatch
+}
+
+pub struct MeterSim {
+  address : Array[Byte]
+  readings : Map[Int32, Array[Byte]]
+}
+pub fn MeterSim::answer_read(Self, Array[Byte]) -> Array[Byte]?
+pub fn MeterSim::generate_stream(Self, Bool) -> Array[Byte]
+pub fn MeterSim::new(Array[Byte]) -> Self
+pub fn MeterSim::set_reading(Self, DataId, Array[Byte]) -> Unit
+
+pub struct Reading {
+  di : DataId
+  value : Array[Byte]
+}
+
+// Type aliases
+
+// Traits
