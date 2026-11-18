@@ -1,0 +1,7 @@
+import {
+  "Krinph/moonmeter",
+  "moonbitlang/core/argparse",
+  "moonbitlang/core/env",
+}
+
+pkgtype(kind: "executable")
