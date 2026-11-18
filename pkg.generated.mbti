@@ -82,6 +82,7 @@ pub enum Command {
   Freeze
   ReadVersion
 }
+pub fn Command::from_byte(Byte) -> Self?
 pub fn Command::value(Self) -> Byte
 
 pub struct DataId {

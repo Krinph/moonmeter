@@ -56,6 +56,30 @@ pub fn Command::value(self : Command) -> Byte {
 }
 
 ///|
+/// Decode a control byte's function part back to a `Command`, if known.
+/// Handles both request bytes (0x01..0x0F) and reply bytes (0x81..0x8F).
+pub fn Command::from_byte(b : Byte) -> Command? {
+  match b.to_int() & 0x1F {
+    0x01 => Some(ReadData)
+    0x02 => Some(ReadNextData)
+    0x03 => Some(WriteDataMulti)
+    0x04 => Some(WriteAddress)
+    0x05 => Some(BroadcastTimeSync)
+    0x06 => Some(WriteDataSingle)
+    0x07 => Some(ReadAddress)
+    0x08 => Some(ChangePassword)
+    0x09 => Some(ClearMaxDemand)
+    0x0A => Some(ClearMeter)
+    0x0B => Some(ClearEvents)
+    0x0C => Some(ReadBlocks)
+    0x0D => Some(ReadEvents)
+    0x0E => Some(Freeze)
+    0x0F => Some(ReadVersion)
+    _ => None
+  }
+}
+
+///|
 /// Data identifier (DI0..DI3) for the most common readings.
 /// In the DATA field the identifiers are sent in order DI0, DI1, DI2, DI3
 /// (each one byte); the last byte carries the value length in the upper

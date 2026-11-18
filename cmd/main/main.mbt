@@ -155,7 +155,7 @@ fn cmd_validate(hex : String) -> Unit {
   for f in frames {
     let decoded = @moonmeter.decode_frame(f)
     match decoded {
-      Ok(frame) => println("  " + @moonmeter.hex_encode(f) + "  -> ok")
+      Ok(_) => println("  " + @moonmeter.hex_encode(f) + "  -> ok")
       Err(_) => println("  " + @moonmeter.hex_encode(f) + "  -> unparseable")
     }
   }
