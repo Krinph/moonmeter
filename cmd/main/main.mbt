@@ -160,15 +160,20 @@ fn cmd_validate(hex : String) -> Unit {
       return
     }
   }
-  let (frames, findings) = @moonmeter.split_frames(bytes)
+  let (frames, findings) = @moonmeter.validate_stream(bytes)
   println("frames found: " + frames.length().to_string())
   for f in frames {
-    let decoded = @moonmeter.decode_frame(f)
-    match decoded {
-      Ok(_) => println("  " + @moonmeter.hex_encode(f) + "  -> ok")
-      Err(_) => println("  " + @moonmeter.hex_encode(f) + "  -> unparseable")
-    }
+    println(
+      "  addr=" +
+      @moonmeter.hex_encode(f.address) +
+      " control=0x" +
+      @moonmeter.hex_byte(f.control) +
+      " data=" +
+      @moonmeter.hex_encode(f.data),
+    )
   }
+  let (errors, warnings) = @moonmeter.count_findings(findings)
+  println("summary: " + errors.to_string() + " error(s), " + warnings.to_string() + " warning(s)")
   if findings.length() > 0 {
     println("findings:")
   }

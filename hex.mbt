@@ -24,6 +24,17 @@ pub fn hex_decode(text : String) -> Array[Byte]? {
 }
 
 ///|
+/// Format a single byte as exactly two uppercase hex digits.
+pub fn hex_byte(b : Byte) -> String {
+  let digits : Array[Char] = [
+    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F',
+  ]
+  let hi = ((b >> 4) & 0x0F).to_int()
+  let lo = (b & 0x0F).to_int()
+  digits[hi].to_string() + digits[lo].to_string()
+}
+
+///|
 /// Format bytes as uppercase hex, space separated.
 pub fn hex_encode(bytes : ArrayView[Byte]) -> String {
   let digits : Array[Char] = [
