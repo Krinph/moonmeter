@@ -49,8 +49,7 @@ pub fn di_label(di : DataId) -> String {
   match di_info(di) {
     Some(info) => info.name
     None => {
-      let label =
-        "DI " +
+      let label = "DI " +
         byte_hex(di.di0) +
         byte_hex(di.di1) +
         byte_hex(di.di2) +
@@ -64,11 +63,9 @@ pub fn di_label(di : DataId) -> String {
 /// Format a byte as exactly two uppercase hex digits.
 fn byte_hex(value : Int32) -> String {
   let digits : Array[Char] = [
-    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E',
-    'F',
+    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F',
   ]
-  let hi = ((value >> 4) & 0x0F)
-  let lo = (value & 0x0F)
+  let hi = (value >> 4) & 0x0F
+  let lo = value & 0x0F
   digits[hi].to_string() + digits[lo].to_string()
 }
-

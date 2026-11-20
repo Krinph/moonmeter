@@ -72,8 +72,6 @@ fn decimal_digit(c : UInt16) -> Int32? {
 
 ///|
 fn digit_char(value : Int32) -> Char {
-  let digits : Array[Char] = [
-    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-  ]
+  let digits : Array[Char] = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
   digits[value]
 }

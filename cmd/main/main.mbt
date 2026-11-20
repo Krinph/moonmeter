@@ -13,7 +13,7 @@ fn main {
   let cmd = @argparse.Command::Command(
     "moonmeter",
     about="DL/T 645-2007 electricity meter protocol toolkit",
-    version="0.1.0",
+    version="0.2.0",
     arg_required_else_help=true,
     options=[
       @argparse.OptionArg::OptionArg(
@@ -142,8 +142,7 @@ fn cmd_parse(hex : String) -> Unit {
         None => ()
       }
       match @moonmeter.decode_error_reply(f) {
-        Some(code) =>
-          println("  error   : " + code.label())
+        Some(code) => println("  error   : " + code.label())
         None => ()
       }
     }
@@ -173,7 +172,13 @@ fn cmd_validate(hex : String) -> Unit {
     )
   }
   let (errors, warnings) = @moonmeter.count_findings(findings)
-  println("summary: " + errors.to_string() + " error(s), " + warnings.to_string() + " warning(s)")
+  println(
+    "summary: " +
+    errors.to_string() +
+    " error(s), " +
+    warnings.to_string() +
+    " warning(s)",
+  )
   if findings.length() > 0 {
     println("findings:")
   }

@@ -72,7 +72,7 @@ pub fn decode_energy(value : Array[Byte], decimals : Int32) -> (Int32, Int32) {
   (bcd_decode(value), decimals)
 }
 
-///
+///|
 /// Format a decoded energy reading as a fixed-point decimal string.
 /// `(123456, 2)` becomes "1234.56"; this is what turns a raw BCD register
 /// into a displayable value without the caller reimplementing decimal

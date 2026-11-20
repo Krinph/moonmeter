@@ -1,6 +1,6 @@
 name = "Krinph/moonmeter"
 
-version = "0.1.0"
+version = "0.2.0"
 
 readme = "README.mbt.md"
 
@@ -17,6 +17,8 @@ keywords = [
   "protocol",
   "energy",
   "billing",
+  "conformance",
+  "simulator",
 ]
 
 preferred_target = "native"
