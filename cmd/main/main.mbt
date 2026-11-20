@@ -136,6 +136,16 @@ fn cmd_parse(hex : String) -> Unit {
         (if @moonmeter.is_reply(f.control) { " (reply)" } else { "" }),
       )
       println("  data    : " + @moonmeter.hex_encode(f.data))
+      match @moonmeter.parse_reading(f.data) {
+        Some(reading) =>
+          println("  di      : " + @moonmeter.di_label(reading.di))
+        None => ()
+      }
+      match @moonmeter.decode_error_reply(f) {
+        Some(code) =>
+          println("  error   : " + code.label())
+        None => ()
+      }
     }
     Err(e) => println("frame: ERROR (" + frame_error_label(e) + ")")
   }
