@@ -133,6 +133,42 @@ pub fn validate_frame(frame : Frame) -> Array[Finding] {
 }
 
 ///|
+/// Validate an entire byte stream: split it into frames, report framing
+/// findings, then run per-frame semantic checks on every frame that decodes.
+/// This is the one-call conformance check used by the CLI and by test suites.
+pub fn validate_stream(bytes : Array[Byte]) -> (Array[Frame], Array[Finding]) {
+  let (raw_frames, findings) = split_frames(bytes)
+  let frames : Array[Frame] = []
+  for raw in raw_frames {
+    match decode_frame(raw) {
+      Err(_) => ()
+      Ok(frame) => {
+        frames.push(frame)
+        for finding in validate_frame(frame) {
+          findings.push(finding)
+        }
+      }
+    }
+  }
+  (frames, findings)
+}
+
+///|
+/// Count findings by severity: `(errors, warnings)`.
+pub fn count_findings(findings : Array[Finding]) -> (Int32, Int32) {
+  let mut errors = 0
+  let mut warnings = 0
+  for f in findings {
+    if f.severity == "error" {
+      errors = errors + 1
+    } else {
+      warnings = warnings + 1
+    }
+  }
+  (errors, warnings)
+}
+
+///|
 /// Format findings as readable text.
 pub fn render_findings(findings : Array[Finding]) -> String {
   if findings.length() == 0 {
