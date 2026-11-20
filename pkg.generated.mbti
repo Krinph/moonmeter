@@ -6,6 +6,10 @@ pub const FrameEnd : Byte = 0x16
 
 pub const FrameStart : Byte = 0x68
 
+pub fn address_from_digits(String) -> Array[Byte]?
+
+pub fn address_to_digits(ArrayView[Byte]) -> String?
+
 pub fn bcd_decode(ArrayView[Byte]) -> Int32
 
 pub fn bcd_encode(Int32, Int32) -> Array[Byte]
@@ -18,7 +22,11 @@ pub fn build_read_request(Array[Byte], DataId) -> Array[Byte]
 
 pub fn build_time_sync(Array[Byte], Int32, Int32) -> Array[Byte]
 
+pub fn count_findings(Array[Finding]) -> (Int32, Int32)
+
 pub fn decode_energy(Array[Byte], Int32) -> (Int32, Int32)
+
+pub fn decode_error_reply(Frame) -> ErrorCode?
 
 pub fn decode_frame(Array[Byte]) -> Result[Frame, FrameError]
 
@@ -38,13 +46,21 @@ pub fn di_active_valley() -> DataId
 
 pub fn di_current() -> DataId
 
+pub fn di_info(DataId) -> DiInfo?
+
+pub fn di_label(DataId) -> String
+
 pub fn di_power() -> DataId
 
 pub fn di_voltage() -> DataId
 
 pub fn encode_frame(Array[Byte], Byte, Array[Byte]) -> Array[Byte]
 
+pub fn format_energy(Int32, Int32) -> String
+
 pub fn function_code(Byte) -> Int32
+
+pub fn hex_byte(Byte) -> String
 
 pub fn hex_decode(String) -> Array[Byte]?
 
@@ -60,7 +76,11 @@ pub fn render_findings(Array[Finding]) -> String
 
 pub fn split_frames(Array[Byte]) -> (Array[Array[Byte]], Array[Finding])
 
+pub fn valid_address(ArrayView[Byte]) -> Bool
+
 pub fn validate_frame(Frame) -> Array[Finding]
+
+pub fn validate_stream(Array[Byte]) -> (Array[Frame], Array[Finding])
 
 // Errors
 
@@ -92,6 +112,24 @@ pub struct DataId {
   di3 : Int32
 }
 pub fn DataId::new(Int32, Int32, Int32, Int32) -> Self
+
+pub struct DiInfo {
+  name : String
+  unit : String
+  decimals : Int32
+}
+
+pub enum ErrorCode {
+  PasswordError
+  ControlCodeError
+  DataIdError
+  DataLengthError
+  AddressError
+  OtherError
+  Unknown
+}
+pub fn ErrorCode::from_byte(Byte) -> Self
+pub fn ErrorCode::label(Self) -> String
 
 pub struct Finding {
   offset : Int32
