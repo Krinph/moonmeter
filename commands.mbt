@@ -69,8 +69,29 @@ pub fn parse_reading(data : Array[Byte]) -> Reading? {
 /// `XXX.X` kWh (2 decimal digits shown as 1, i.e. value / 10.0).
 /// Returns the raw integer (in 0.1 kWh units) and the number of decimals.
 pub fn decode_energy(value : Array[Byte], decimals : Int32) -> (Int32, Int32) {
-  let raw = bcd_decode(value)
-  (raw, decimals)
+  (bcd_decode(value), decimals)
+}
+
+///
+/// Format a decoded energy reading as a fixed-point decimal string.
+/// `(123456, 2)` becomes "1234.56"; this is what turns a raw BCD register
+/// into a displayable value without the caller reimplementing decimal
+/// placement.
+pub fn format_energy(raw : Int32, decimals : Int32) -> String {
+  if decimals <= 0 {
+    return raw.to_string()
+  }
+  let mut scale = 1
+  for _i = 0; _i < decimals; _i = _i + 1 {
+    scale = scale * 10
+  }
+  let whole = raw / scale
+  let frac = raw % scale
+  let mut frac_str = frac.to_string()
+  while frac_str.length() < decimals {
+    frac_str = "0" + frac_str
+  }
+  whole.to_string() + "." + frac_str
 }
 
 ///|
