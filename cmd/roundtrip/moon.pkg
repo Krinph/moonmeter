@@ -1,0 +1,5 @@
+import {
+  "Krinph/moonmeter",
+}
+
+pkgtype(kind: "executable")
