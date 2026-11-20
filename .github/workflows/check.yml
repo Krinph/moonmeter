@@ -51,5 +51,5 @@ jobs:
           moon run cmd/main -- read | grep -q "68 "
           moon run cmd/main -- simulate | grep -q "81"
           moon run cmd/main -- validate "68 00 01 02 03 04 05 68 81 06 00 00 01 00 01 00 01 69 15" | grep -q "bad_end"
-          moon run cmd/main -- parse "68 00 01 02 03 04 05 68 81 08 00 00 00 00 56 34 12 00 04 16" | grep -q "Total active energy"
+          moon run cmd/main -- parse "68 00 01 02 03 04 05 68 81 08 00 00 00 00 00 56 34 12 00 04 16" | grep -q "Total active energy"
           moon run cmd/roundtrip | grep -q "1234.56 kWh"

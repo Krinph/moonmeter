@@ -40,7 +40,7 @@ moon run cmd/main -- read
 #   -> 68 00 01 02 03 04 05 68 01 04 00 00 00 00 00 E4 16
 
 # 解析一帧（显示地址、控制码、功能码、数据域、DI 名称、错误码）
-moon run cmd/main -- parse 68 00 01 02 03 04 05 68 81 08 00 00 00 00 56 34 12 00 04 16
+moon run cmd/main -- parse 68 00 01 02 03 04 05 68 81 08 00 00 00 00 00 56 34 12 00 04 16
 #   -> di : Total active energy
 
 # 生成模拟电表帧流（两个读数）
@@ -66,7 +66,7 @@ moon run cmd/roundtrip
 1. build read request
    68 00 01 02 03 04 05 68 01 04 00 00 00 00 00 E4 16
 2. simulate an electricity meter
-   68 00 01 02 03 04 05 68 81 08 00 00 00 00 56 34 12 00 04 16
+   68 00 01 02 03 04 05 68 81 08 00 00 00 00 00 56 34 12 00 04 16
 3. decode and label the reading
    Total active energy
 4. format the value

@@ -37,3 +37,16 @@ test "di catalog: unknown identifier is reported, not guessed" {
   assert_eq(di_label(DataId::new(9, 9, 9, 9)), "DI 09090909")
   assert_eq(di_label(di_active_total()), "Total active energy")
 }
+
+///|
+/// The reply frame quoted in README.md and used by the CI smoke test must
+/// stay decodable; otherwise the documented `parse` example silently breaks.
+test "di catalog: documented example frame stays valid" {
+  let frame_hex = "68 00 01 02 03 04 05 68 81 08 00 00 00 00 00 56 34 12 00 04 16"
+  let bytes = hex_decode(frame_hex).unwrap()
+  assert_eq(bytes.length(), 21)
+  let frame = decode_frame(bytes).unwrap()
+  let reading = parse_reading(frame.data).unwrap()
+  assert_eq(di_label(reading.di), "Total active energy")
+  assert_eq(bcd_decode(reading.value), 123456)
+}
