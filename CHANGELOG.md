@@ -3,6 +3,40 @@
 All notable changes to moonmeter are documented here. This project follows
 semantic versioning.
 
+## 0.2.1 — DL/T 645-2007 conformance fix
+
+Corrected the protocol implementation to match the DL/T 645-2007 standard
+after review feedback. These are breaking semantic fixes: the previous
+definitions conflicted with the standard's frame and control-code tables.
+
+### Fixed
+
+- Length field: was a two-byte little-endian `L(2)` with `13+L` frames;
+  now the standard **single-byte L** with `12+L` frames.
+- Data field: now applies the mandatory **+0x33 offset on transmit** and
+  **-0x33 on receive**, for both requests and replies.
+- Control codes: read data `0x01` -> **`0x11`**, normal read reply `0x81` ->
+  **`0x91`**, abnormal read reply `0xC1` -> **`0xD1`**; abnormal detection
+  now requires D7 (reply) and D6 (abnormal) together.
+- Function-code table: was a contiguous `0x01..0x0F`; now the standard
+  discrete codes (`0x08`, `0x11..0x1B`), including broadcast time sync
+  `0x08` (was `0x05`).
+- Data identifiers: forward active total energy is `00010000` (was
+  `00000000`), transmitted DI0..DI3; DI metadata now uses standard names,
+  units and decimal places.
+- `validate_frame` no longer reports a short read reply for abnormal
+  replies, which carry a one-byte error code instead of a DI echo.
+
+### Added
+
+- Golden byte-for-byte tests for the standard read request and reply frames
+  that decode to `1234.56 kWh`.
+- `docs/STANDARD_CONFORMANCE.md`: conformance scope, key message semantics,
+  and a full request -> reply -> reading walkthrough with checksum arithmetic.
+- `DataId::wire_bytes`, `DataId::to_string`, `normal_reply_control`,
+  `abnormal_reply_control`, `has_follow_up`, `offset_data`, `unoffset_data`.
+- Test suite expanded from 36 to 43 tests (all passing).
+
 ## 0.2.0 — MVP
 
 The first complete, hardware-free reading loop: build a request, simulate a

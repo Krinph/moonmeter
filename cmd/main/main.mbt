@@ -2,9 +2,9 @@
 /// moonmeter CLI: parse, validate and simulate DL/T 645 frames.
 ///
 /// Subcommands:
-///   parse <hex>       decode one frame and print its structure
+///   parse <hex>       decode one DL/T 645-2007 frame and print its structure
 ///   validate <hex>    split a stream and report conformance findings
-///   read <hex-addr>   build a read-data request frame (DI=00000000)
+///   read              build a read-data request (0x11, DI=00010000)
 ///   simulate          print a synthetic meter stream (two readings)
 ///   simulate --bad    print a stream with a corrupted ending byte
 
@@ -13,7 +13,7 @@ fn main {
   let cmd = @argparse.Command::Command(
     "moonmeter",
     about="DL/T 645-2007 electricity meter protocol toolkit",
-    version="0.2.0",
+    version="0.2.1",
     arg_required_else_help=true,
     options=[
       @argparse.OptionArg::OptionArg(
@@ -58,7 +58,7 @@ fn main {
       ),
       @argparse.Command::Command(
         "read",
-        about="build a read-data request frame (DI 00000000)",
+        about="build a read-data request frame (0x11, DI 00010000)",
       ),
       @argparse.Command::Command(
         "simulate",
