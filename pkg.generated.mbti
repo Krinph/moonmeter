@@ -2,9 +2,21 @@
 package "Krinph/moonmeter"
 
 // Values
+pub const ControlAbnormal : Int32 = 0x40
+
+pub const ControlDirection : Int32 = 0x80
+
+pub const ControlFollowUp : Int32 = 0x20
+
+pub const ControlFunctionMask : Int32 = 0x1F
+
+pub const DataOffset : Byte = 0x33
+
 pub const FrameEnd : Byte = 0x16
 
 pub const FrameStart : Byte = 0x68
+
+pub fn abnormal_reply_control(Byte) -> Byte
 
 pub fn address_from_digits(String) -> Array[Byte]?
 
@@ -22,6 +34,8 @@ pub fn build_read_request(Array[Byte], DataId) -> Array[Byte]
 
 pub fn build_time_sync(Array[Byte], Int32, Int32) -> Array[Byte]
 
+pub fn checksum(ArrayView[Byte]) -> Byte
+
 pub fn count_findings(Array[Finding]) -> (Int32, Int32)
 
 pub fn decode_energy(Array[Byte], Int32) -> (Int32, Int32)
@@ -29,10 +43,6 @@ pub fn decode_energy(Array[Byte], Int32) -> (Int32, Int32)
 pub fn decode_error_reply(Frame) -> ErrorCode?
 
 pub fn decode_frame(Array[Byte]) -> Result[Frame, FrameError]
-
-pub fn di3_decimals(Int32) -> Int32
-
-pub fn di3_len(Int32) -> Int32
 
 pub fn di_active_flat() -> DataId
 
@@ -60,6 +70,8 @@ pub fn format_energy(Int32, Int32) -> String
 
 pub fn function_code(Byte) -> Int32
 
+pub fn has_follow_up(Byte) -> Bool
+
 pub fn hex_byte(Byte) -> String
 
 pub fn hex_decode(String) -> Array[Byte]?
@@ -70,11 +82,17 @@ pub fn is_error_reply(Byte) -> Bool
 
 pub fn is_reply(Byte) -> Bool
 
+pub fn normal_reply_control(Byte) -> Byte
+
+pub fn offset_data(ArrayView[Byte]) -> Array[Byte]
+
 pub fn parse_reading(Array[Byte]) -> Reading?
 
 pub fn render_findings(Array[Finding]) -> String
 
 pub fn split_frames(Array[Byte]) -> (Array[Array[Byte]], Array[Finding])
+
+pub fn unoffset_data(ArrayView[Byte]) -> Array[Byte]
 
 pub fn valid_address(ArrayView[Byte]) -> Bool
 
@@ -86,32 +104,31 @@ pub fn validate_stream(Array[Byte]) -> (Array[Frame], Array[Finding])
 
 // Types and methods
 pub enum Command {
+  BroadcastTimeSync
   ReadData
   ReadNextData
-  WriteDataMulti
-  WriteAddress
-  BroadcastTimeSync
-  WriteDataSingle
   ReadAddress
+  WriteData
+  WriteAddress
+  Freeze
+  ChangeBaudRate
   ChangePassword
   ClearMaxDemand
   ClearMeter
   ClearEvents
-  ReadBlocks
-  ReadEvents
-  Freeze
-  ReadVersion
 }
 pub fn Command::from_byte(Byte) -> Self?
 pub fn Command::value(Self) -> Byte
 
 pub struct DataId {
-  di0 : Int32
-  di1 : Int32
-  di2 : Int32
   di3 : Int32
+  di2 : Int32
+  di1 : Int32
+  di0 : Int32
 }
 pub fn DataId::new(Int32, Int32, Int32, Int32) -> Self
+pub fn DataId::to_string(Self) -> String
+pub fn DataId::wire_bytes(Self) -> Array[Byte]
 
 pub struct DiInfo {
   name : String

@@ -1,13 +1,11 @@
 ///|
-/// DL/T 645 conformance validator.
+/// DL/T 645-2007 conformance validator.
 ///
-/// This is the analysis layer of moonmeter: it does not merely transport
-/// frames, it checks whether a stream of bytes is a *valid* DL/T 645
-/// exchange and reports structured diagnostics (frame errors, checksum
-/// mismatches, illegal BCD digits, unknown control codes, inconsistent
-/// length fields). A meter or a master that produces frames violating these
-/// rules can be flagged automatically, which is the use case for protocol
-/// conformance testers.
+/// The analysis layer of moonmeter: it checks whether a byte stream is a
+/// valid DL/T 645 exchange and reports structured diagnostics (framing,
+/// checksum, BCD, control-code semantics). This is the capability a
+/// protocol conformance tester needs, and it is grounded in the standard's
+/// exact frame rules (single-byte L, +0x33 DATA offset, 12+L length).
 
 ///|
 /// A single validation finding.
@@ -25,7 +23,7 @@ pub struct Finding {
 ///|
 /// Split a byte stream into frames. Bytes between frames are reported as
 /// "garbage" findings so a stream with framing problems is never silently
-/// accepted.
+/// accepted. Optional FE preamble bytes are skipped without a finding.
 pub fn split_frames(
   bytes : Array[Byte],
 ) -> (Array[Array[Byte]], Array[Finding]) {
@@ -33,6 +31,11 @@ pub fn split_frames(
   let findings : Array[Finding] = []
   let mut i = 0
   while i < bytes.length() {
+    // FE wake-up preamble bytes are legal and not part of the frame.
+    if bytes[i] == 0xFE {
+      i = i + 1
+      continue
+    }
     if bytes[i] != FrameStart {
       findings.push({
         offset: i,
@@ -43,8 +46,8 @@ pub fn split_frames(
       i = i + 1
       continue
     }
-    // Look for the end: scan for the closing 16H after a plausible length.
-    if i + 13 > bytes.length() {
+    // A frame needs at least 12 bytes: 68 ADDR[6] 68 C L CS 16.
+    if i + 12 > bytes.length() {
       findings.push({
         offset: i,
         severity: "error",
@@ -53,9 +56,19 @@ pub fn split_frames(
       })
       break
     }
-    // Control is byte i+8; length is bytes i+9..i+10 (little-endian).
-    let len = bytes[i + 9].to_int() | (bytes[i + 10].to_int() << 8)
-    let frame_len = 11 + len + 2
+    if bytes[i + 7] != FrameStart {
+      findings.push({
+        offset: i,
+        severity: "error",
+        code: "bad_start",
+        message: "second start byte 68H missing at offset 7",
+      })
+      i = i + 1
+      continue
+    }
+    // Single-byte length at i+9; total wire length = 12 + L.
+    let len = bytes[i + 9].to_int()
+    let frame_len = 12 + len
     if i + frame_len > bytes.length() {
       findings.push({
         offset: i,
@@ -68,9 +81,9 @@ pub fn split_frames(
       break
     }
     let frame = bytes[i:i + frame_len].to_owned()
-    // Validate the checksum.
-    let expected = checksum_sum(frame[0:frame_len - 2])
-    if expected != frame[frame_len - 2] {
+    // CS covers [0 .. 9+L], i.e. first 68H through last DATA byte.
+    let expected = checksum(frame[0:10 + len])
+    if expected != frame[10 + len] {
       findings.push({
         offset: i,
         severity: "error",
@@ -78,7 +91,7 @@ pub fn split_frames(
         message: "checksum mismatch at offset " + i.to_string(),
       })
     }
-    if frame[frame_len - 1] != FrameEnd {
+    if frame[11 + len] != FrameEnd {
       findings.push({
         offset: i,
         severity: "error",
@@ -105,7 +118,7 @@ pub fn split_frames(
 }
 
 ///|
-/// Validate a single decoded frame against the protocol rules.
+/// Validate a single decoded frame against protocol semantics.
 pub fn validate_frame(frame : Frame) -> Array[Finding] {
   let findings : Array[Finding] = []
   let fc = function_code(frame.control)
@@ -117,9 +130,21 @@ pub fn validate_frame(frame : Frame) -> Array[Finding] {
       message: "control byte has zero function code",
     })
   }
-  // The data field length implied by the frame is already consistent by
-  // construction; but a read reply must carry at least the 4 DI bytes.
+  match Command::from_byte(frame.control) {
+    None =>
+      findings.push({
+        offset: 8,
+        severity: "warning",
+        code: "unknown_function",
+        message: "control code is not a defined DL/T 645-2007 function",
+      })
+    Some(_) => ()
+  }
+  // A normal read-data reply must echo at least the 4 DI bytes. An
+  // abnormal reply instead carries a 1-byte error code and must not be
+  // treated as a short reading.
   if is_reply(frame.control) &&
+    !is_error_reply(frame.control) &&
     fc == Command::ReadData.value().to_int() &&
     frame.data.length() < 4 {
     findings.push({
@@ -133,9 +158,8 @@ pub fn validate_frame(frame : Frame) -> Array[Finding] {
 }
 
 ///|
-/// Validate an entire byte stream: split it into frames, report framing
-/// findings, then run per-frame semantic checks on every frame that decodes.
-/// This is the one-call conformance check used by the CLI and by test suites.
+/// Validate an entire byte stream: split into frames, report framing
+/// findings, then run per-frame semantic checks on every valid frame.
 pub fn validate_stream(bytes : Array[Byte]) -> (Array[Frame], Array[Finding]) {
   let (raw_frames, findings) = split_frames(bytes)
   let frames : Array[Frame] = []
@@ -198,14 +222,4 @@ fn hex(b : Byte) -> String {
   let hi = ((b >> 4) & 0x0F).to_int()
   let lo = (b & 0x0F).to_int()
   digits[hi].to_string() + digits[lo].to_string()
-}
-
-///|
-/// Sum of bytes modulo 256 (matches frame CS).
-fn checksum_sum(bytes : ArrayView[Byte]) -> Byte {
-  let mut sum = 0
-  for b in bytes {
-    sum = sum + b.to_int()
-  }
-  (sum & 0xFF).to_byte()
 }

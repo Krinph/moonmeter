@@ -1,13 +1,14 @@
 ///|
-/// DL/T 645-2007 error-reply decoding.
+/// DL/T 645-2007 abnormal-reply (error) decoding.
 ///
-/// When a meter cannot serve a request it sets the error direction bit (0x40)
-/// in the control byte and returns a single error code in the first data byte.
-/// `moonmeter` already exposes `is_error_reply`; this module turns that signal
-/// into a structured, human-readable `ErrorCode`.
+/// When a meter cannot serve a request it sends a slave reply (D7=1) with
+/// the abnormal flag set (D6=1). For a read-data request that control byte
+/// is 0xD1, NOT 0xC1. The DATA field carries a one-byte error information
+/// code; like all DATA it arrives offset by +0x33 and is restored by
+/// `decode_frame` before this module sees it.
 
 ///|
-/// Standard DL/T 645 error codes carried in an error reply's data field.
+/// Error information codes carried in an abnormal reply's DATA field.
 pub enum ErrorCode {
   PasswordError
   ControlCodeError
@@ -19,7 +20,7 @@ pub enum ErrorCode {
 }
 
 ///|
-/// Decode an error byte into a structured `ErrorCode`.
+/// Decode an error information byte into a structured `ErrorCode`.
 /// Unrecognised values map to `Unknown` rather than being dropped.
 pub fn ErrorCode::from_byte(b : Byte) -> ErrorCode {
   match b.to_int() {
@@ -48,8 +49,9 @@ pub fn ErrorCode::label(self : ErrorCode) -> String {
 }
 
 ///|
-/// Extract the error code from a decoded frame.
-/// Returns `None` unless the frame is an error reply that carries a code byte.
+/// Extract the error information code from a decoded frame.
+/// Returns `None` unless the frame is a genuine abnormal slave reply
+/// (D7=1 and D6=1) that carries at least one DATA byte.
 pub fn decode_error_reply(frame : Frame) -> ErrorCode? {
   if !is_error_reply(frame.control) || frame.data.length() == 0 {
     return None

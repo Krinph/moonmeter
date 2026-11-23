@@ -1,8 +1,8 @@
 ///|
-/// A virtual DL/T 645 meter used for simulation and testing.
+/// A virtual DL/T 645-2007 meter used for simulation and testing.
 ///
 /// The simulator owns a set of readings (DI -> value bytes) and can:
-///   - answer a read-data request with a valid 0x81 reply frame;
+///   - answer a read-data request with a valid 0x91 reply frame;
 ///   - generate a live data stream (frames with configurable errors) so that
 ///     master implementations and protocol testers can be exercised offline.
 ///
@@ -53,11 +53,12 @@ pub fn MeterSim::answer_read(
   if frame.data.length() < 4 {
     return None
   }
+  // Request DATA holds DI0..DI3 in wire order; rebuild the DI structure.
   let di = DataId::new(
-    frame.data[0].to_int(),
-    frame.data[1].to_int(),
-    frame.data[2].to_int(),
     frame.data[3].to_int(),
+    frame.data[2].to_int(),
+    frame.data[1].to_int(),
+    frame.data[0].to_int(),
   )
   let value = self.readings.get(di_key(di))
   let value_bytes = match value {
@@ -65,15 +66,14 @@ pub fn MeterSim::answer_read(
     None => return None
   }
   let reply_data : Array[Byte] = []
-  reply_data.push(di.di0.to_byte())
-  reply_data.push(di.di1.to_byte())
-  reply_data.push(di.di2.to_byte())
-  reply_data.push(di.di3.to_byte())
+  for b in di.wire_bytes() {
+    reply_data.push(b)
+  }
   for b in value_bytes {
     reply_data.push(b)
   }
-  // Reply control = 0x80 | function (0x81 for read-data).
-  let reply_control = (0x80 | Command::ReadData.value().to_int()).to_byte()
+  // Normal read-data reply control = 0x91 (D7 reply + function 0x11).
+  let reply_control = normal_reply_control(Command::ReadData.value())
   Some(encode_frame(self.address, reply_control, reply_data))
 }
 
@@ -86,21 +86,25 @@ pub fn MeterSim::generate_stream(
 ) -> Array[Byte] {
   let out : Array[Byte] = []
   for kv in self.readings {
+    // di_key packs di0 in the highest byte; reverse it to rebuild the DI.
     let di = DataId::new(
-      (kv.0 >> 24) & 0xFF,
-      (kv.0 >> 16) & 0xFF,
-      (kv.0 >> 8) & 0xFF,
       kv.0 & 0xFF,
+      (kv.0 >> 8) & 0xFF,
+      (kv.0 >> 16) & 0xFF,
+      (kv.0 >> 24) & 0xFF,
     )
     let reply_data : Array[Byte] = []
-    reply_data.push(di.di0.to_byte())
-    reply_data.push(di.di1.to_byte())
-    reply_data.push(di.di2.to_byte())
-    reply_data.push(di.di3.to_byte())
+    for b in di.wire_bytes() {
+      reply_data.push(b)
+    }
     for b in kv.1 {
       reply_data.push(b)
     }
-    let frame = encode_frame(self.address, 0x81, reply_data)
+    let frame = encode_frame(
+      self.address,
+      normal_reply_control(Command::ReadData.value()),
+      reply_data,
+    )
     for b in frame {
       out.push(b)
     }

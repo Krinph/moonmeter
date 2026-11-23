@@ -1,32 +1,30 @@
 ///|
-/// High-level DL/T 645 command builders and responses.
+/// High-level DL/T 645-2007 command builders and responses.
 ///
-/// A "read data" request sends control 0x01 with a 4-byte data field holding
-/// DI0..DI3. The meter answers with control 0x81 and the requested values
-/// appended after the DI bytes.
+/// A read-data request sends control 0x11 with a 4-byte DATA field holding
+/// the data identifier in wire order DI0..DI3 (offset by +0x33 on the wire).
+/// The meter answers with control 0x91 (normal) or 0xD1 (abnormal), carrying
+/// the DI echo plus the requested value bytes.
 
 ///|
 /// A structured reading: the DI that was read plus the decoded value bytes.
 pub struct Reading {
   di : DataId
-  /// Raw value bytes (after the 4 DI bytes in the reply data field).
+  /// Logical value bytes (after the 4 DI bytes in the reply DATA field).
   value : Array[Byte]
 }
 
 ///|
-/// Build a "read data" request frame (control 0x01).
+/// Build a "read data" request frame (control 0x11).
 pub fn build_read_request(address : Array[Byte], di : DataId) -> Array[Byte] {
-  let data : Array[Byte] = []
-  data.push(di.di0.to_byte())
-  data.push(di.di1.to_byte())
-  data.push(di.di2.to_byte())
-  data.push(di.di3.to_byte())
-  encode_frame(address, Command::ReadData.value(), data)
+  encode_frame(address, Command::ReadData.value(), di.wire_bytes())
 }
 
 ///|
-/// Build a broadcast time-sync frame (control 0x05, address all-0xFF).
-/// The data field is the 6-byte BCD time: YY MM DD hh mm ss.
+/// Build a broadcast time-sync frame. DL/T 645-2007 defines broadcast
+/// time sync with control 0x08 and the broadcast address all-0x99 (the
+/// 12-digit address 999999999999H). The DATA field is 6 BCD bytes
+/// YY MM DD hh mm ss. Per the standard a broadcast command gets no reply.
 pub fn build_time_sync(
   address : Array[Byte],
   yymmdd : Int32,
@@ -43,8 +41,8 @@ pub fn build_time_sync(
 }
 
 ///|
-/// Parse a reply data field: the first 4 bytes are DI0..DI3, the rest is the
-/// value. Returns `None` if the field is too short.
+/// Parse a reply DATA field: the first 4 logical bytes are DI0..DI3 (wire
+/// order), the rest is the value. Returns `None` if too short.
 pub fn parse_reading(data : Array[Byte]) -> Reading? {
   if data.length() < 4 {
     return None
@@ -55,28 +53,27 @@ pub fn parse_reading(data : Array[Byte]) -> Reading? {
   }
   Some({
     di: DataId::new(
-      data[0].to_int(),
-      data[1].to_int(),
-      data[2].to_int(),
       data[3].to_int(),
+      data[2].to_int(),
+      data[1].to_int(),
+      data[0].to_int(),
     ),
     value,
   })
 }
 
 ///|
-/// Decode an active-energy reading: `value` holds 4 BCD bytes representing
-/// `XXX.X` kWh (2 decimal digits shown as 1, i.e. value / 10.0).
-/// Returns the raw integer (in 0.1 kWh units) and the number of decimals.
+/// Decode an active-energy reading: `value` holds BCD bytes representing
+/// energy in kWh. Returns the raw integer and the number of decimals, so
+/// `format_energy` can turn it into a display value. For the common
+/// 4-byte register the value is in 0.01 kWh units (2 decimals).
 pub fn decode_energy(value : Array[Byte], decimals : Int32) -> (Int32, Int32) {
   (bcd_decode(value), decimals)
 }
 
 ///|
 /// Format a decoded energy reading as a fixed-point decimal string.
-/// `(123456, 2)` becomes "1234.56"; this is what turns a raw BCD register
-/// into a displayable value without the caller reimplementing decimal
-/// placement.
+/// `(123456, 2)` becomes "1234.56" kWh.
 pub fn format_energy(raw : Int32, decimals : Int32) -> String {
   if decimals <= 0 {
     return raw.to_string()
@@ -95,19 +92,27 @@ pub fn format_energy(raw : Int32, decimals : Int32) -> String {
 }
 
 ///|
-/// Helper: does a reply carry the "slave replies" direction bit?
+/// Is the control byte a slave reply? D7 set.
 pub fn is_reply(control : Byte) -> Bool {
-  (control.to_int() & 0x80) != 0
+  (control.to_int() & ControlDirection) != 0
 }
 
 ///|
-/// Is this an error reply (bit 6 set)?
+/// Is the control byte an abnormal (error) reply? D7 AND D6 set.
+/// A master command with D6 set is not a valid abnormal reply.
 pub fn is_error_reply(control : Byte) -> Bool {
-  (control.to_int() & 0x40) != 0
+  let c = control.to_int()
+  (c & ControlDirection) != 0 && (c & ControlAbnormal) != 0
 }
 
 ///|
-/// The function code part of a control byte (bits 4..0).
+/// Does the control byte indicate a follow-up frame? D5 set.
+pub fn has_follow_up(control : Byte) -> Bool {
+  (control.to_int() & ControlFollowUp) != 0
+}
+
+///|
+/// The function code part of a control byte (D4..D0).
 pub fn function_code(control : Byte) -> Int32 {
-  control.to_int() & 0x1F
+  control.to_int() & ControlFunctionMask
 }
