@@ -48,7 +48,8 @@ wire stream. Ready for library use, CLI debugging and conformance testing.
 - Data-identifier catalog with human-readable names, units and decimal places
   (`di_info`, `di_label`), including a hex fallback for unknown identifiers.
 - DL/T 645 error-reply decoding (`ErrorCode`, `decode_error_reply`) for the
-  standard error codes carried in `0xC1`-class replies.
+  standard error codes carried in abnormal replies (later corrected to the
+  standard `0xD1` control code in 0.2.1).
 - Meter address validation and 12-digit conversion helpers (`valid_address`,
   `address_from_digits`, `address_to_digits`).
 - Fixed-point energy formatting (`format_energy`), e.g. `(123456, 2)` -> `1234.56`.

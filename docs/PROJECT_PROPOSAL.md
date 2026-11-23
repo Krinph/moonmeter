@@ -6,7 +6,7 @@
 - GitHub 仓库链接：https://github.com/Krinph/moonmeter
 - 项目方向：工具库 / 工业协议基础设施（智能电表、抄表、充电桩计费）
 - 是否为移植项目：否（原创项目）
-- 当前状态：**MVP 已完成**（版本 0.2.0）
+- 当前状态：**MVP 已完成**（版本 0.2.1，含 DL/T 645-2007 规约符合性更正）
 
 **对初审意见的回应（本次重点）**
 
@@ -76,7 +76,7 @@ moonmeter 是 MoonBit 生态中首个实现中国电能表通信规约 DL/T 645-
 - ✅ 电量定点格式化：`format_energy` 将 BCD 原始值按小数位格式化为 "1234.56"；
 - ✅ CLI 四个子命令：parse / validate / read / simulate；
 - ✅ 可运行闭环示例 `moon run cmd/roundtrip`；
-- ✅ 43 项单元测试（含逐字节黄金报文测试）、三平台 CI、README、mooncakes 包文档；
+- ✅ 44 项单元测试（含逐字节黄金报文测试）、三平台 CI、README、mooncakes 包文档；
 - ✅ 标准符合性澄清文档 `docs/STANDARD_CONFORMANCE.md`。
 
 **与现有工具的关系（复用 / 扩展 / 差异）**

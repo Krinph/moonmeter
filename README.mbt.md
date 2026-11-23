@@ -56,7 +56,7 @@ CLI:
 moon run cmd/main -- --address 129078563412 read
 moon run cmd/main -- parse "68 12 90 78 56 34 12 68 91 08 33 33 34 33 89 67 45 33 54 16"
 moon run cmd/main -- simulate
-moon run cmd/main -- validate "68 12 90 78 56 34 12 68 91 06 00 00 01 00 01 00 01 69 15"
+moon run cmd/main -- validate "68 12 90 78 56 34 12 68 91 08 33 33 34 33 89 67 45 33 54 16"
 ```
 
 A full runnable round-trip example is available in the repository:

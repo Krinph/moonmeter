@@ -218,7 +218,11 @@ pub fn render_findings(findings : Array[Finding]) -> String {
 ///|
 /// Hex format a byte.
 fn hex(b : Byte) -> String {
-  let digits = "0123456789ABCDEF"
+  // Use Array[Char], not String indexing: indexing a String yields a code
+  // point (Int), so "4953" would be printed for 0x15 instead of "15".
+  let digits : Array[Char] = [
+    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F',
+  ]
   let hi = ((b >> 4) & 0x0F).to_int()
   let lo = (b & 0x0F).to_int()
   digits[hi].to_string() + digits[lo].to_string()

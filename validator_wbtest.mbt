@@ -57,3 +57,14 @@ test "validate_stream: undefined function code is flagged" {
 test "validate_stream: render_findings is stable for empty input" {
   assert_eq(render_findings([]), "OK: no findings\n")
 }
+
+///|
+// Regression: a stray byte must be shown as a two-digit hex byte value,
+// never as decimal Unicode code points (0x15 -> "15", not "4953").
+test "validate_stream: stray byte message shows correct two-digit hex" {
+  let stream : Array[Byte] = [0x15]
+  let (_frames, findings) = validate_stream(stream)
+  assert_eq(findings.length(), 1)
+  assert_eq(findings[0].code, "stray_byte")
+  assert_eq(findings[0].message, "byte 0x15 outside a frame")
+}

@@ -4,7 +4,7 @@
 
 moonmeter 是 MoonBit 生态中**首个** DL/T 645（中国多功能电能表通信规约）实现。它把一次完整抄读闭环搬到代码里：**构造标准请求帧 → 编码 → 模拟电表应答 → 解码 → 格式化 → 一致性校验**，无需硬件即可开发、测试和验证基于该规约的抄表、计费与充电桩系统。
 
-当前版本 `0.2.0`（MVP）：核心协议能力、库 + CLI + 可运行示例、43 项测试与三平台 CI 均已就绪。协议实现严格遵循 DL/T 645-2007 的帧格式、控制码与数据标识定义；逐字节报文案例与符合性边界见 [docs/STANDARD_CONFORMANCE.md](docs/STANDARD_CONFORMANCE.md)。
+当前版本 `0.2.1`（MVP + 规约符合性更正）：核心协议能力、库 + CLI + 可运行示例、44 项测试与三平台 CI 均已就绪。协议实现严格遵循 DL/T 645-2007 的帧格式、控制码与数据标识定义；逐字节报文案例与符合性边界见 [docs/STANDARD_CONFORMANCE.md](docs/STANDARD_CONFORMANCE.md)。
 
 ## Features
 
@@ -43,8 +43,8 @@ moon run cmd/main -- --address 129078563412 read
 moon run cmd/main -- parse "68 12 90 78 56 34 12 68 91 08 33 33 34 33 89 67 45 33 54 16"
 #   -> control : 0x91 / function: 17 (reply) / di : Forward active total energy
 
-# 校验一段字节流（发现坏帧/坏校验/杂散字节，并汇总错误/警告数）
-moon run cmd/main -- validate "68 12 90 78 56 34 12 68 91 06 00 00 01 00 01 00 01 69 15"
+# 校验标准应答字节流（合法帧 → all good；如需观察诊断输出，可改用损坏帧）
+moon run cmd/main -- validate "68 12 90 78 56 34 12 68 91 08 33 33 34 33 89 67 45 33 54 16"
 ```
 
 ### Runnable example
@@ -109,7 +109,7 @@ let (errors, warnings) = @moonmeter.count_findings(findings)
 
 ```text
 moon check --deny-warn
-moon test      # 43 项测试：帧往返、+33H、校验、BCD、地址、DI、命令码、错误应答、格式化、模拟器、校验器、黄金报文
+moon test      # 44 项测试：帧往返、+33H、校验、BCD、地址、DI、命令码、错误应答、格式化、模拟器、校验器、黄金报文
 moon fmt --check
 moon info      # 公开接口见 pkg.generated.mbti
 moon run cmd/roundtrip
