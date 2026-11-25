@@ -3,6 +3,32 @@
 All notable changes to moonmeter are documented here. This project follows
 semantic versioning.
 
+## 0.3.1 — Validator precision and standard-currency check
+
+### Fixed
+
+- Validator no longer reports standard wildcard `0xAA` address bytes as invalid BCD.
+- `sequence_matches` now verifies the read-next transaction function, reply
+  direction, echoed DI and sequence byte instead of comparing only the last byte.
+
+### Added
+
+- Semantic reply-length checks for abnormal replies, read-address replies,
+  read-next replies and broadcast time sync; a time-sync reply is flagged as
+  unexpected because the standard defines the command as broadcast-only.
+- Five regression tests; the suite expanded from 56 to 61 tests.
+- Bumped package, CLI and documentation version to 0.3.1.
+
+### Docs
+
+- Added a standard-currency check (as of 2026-11-25): confirmed via the national
+  standards platform and the National Digital Standard Library that DL/T 645-2007
+  remains current with no 202x successor, and clarified that DL/T 698.45-2017/2026
+  are separate object-oriented standards rather than replacements for 645.
+- Clarified the conformance scope: complete protocol layer (link layer, all twelve
+  application functions, reply/session semantics), arbitrary DI wire encoding with
+  metadata for common DIs, and device-specific items left to meter manuals.
+
 ## 0.3.0 — Full DL/T 645-2007 conformance
 
 Extended from the read-data subset to the complete application layer in

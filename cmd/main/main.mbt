@@ -14,7 +14,7 @@ fn main {
   let cmd = @argparse.Command::Command(
     "moonmeter",
     about="DL/T 645-2007 electricity meter protocol toolkit",
-    version="0.3.0",
+    version="0.3.1",
     arg_required_else_help=true,
     options=[
       @argparse.OptionArg::OptionArg(

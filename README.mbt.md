@@ -3,11 +3,18 @@
 DL/T 645-2007 electricity meter communication protocol stack for MoonBit,
 conformant to the Chinese multi-function energy meter standard.
 
-`moonmeter` targets full DL/T 645-2007 conformance: all twelve application-layer
-function codes (08H, 11H..1BH), the three reply-control families (normal `9x`,
-follow-up `Bx`, abnormal `Dx`), multi-frame read-next transfers with sequence
-numbers, and a complete hardware-free round trip: build a standard request,
-simulate a meter reply, decode the reading and validate the byte stream.
+`moonmeter` targets full protocol-layer conformance to the current DL/T 645-2007:
+all twelve application-layer function codes (08H, 11H..1BH), the three
+reply-control families (normal `9x`, follow-up `Bx`, abnormal `Dx`), multi-frame
+read-next transfers with sequence numbers, and a complete hardware-free round
+trip: build a standard request, simulate a meter reply, decode the reading and
+validate the byte stream.
+
+As of 2026-11-25, the national standards platform still lists DL/T 645-2007 as
+current with no 202x successor. DL/T 698.45-2017/2026 are separate
+object-oriented standards, not upgrades of DL/T 645. Device-specific items
+(supported DIs, scaling, permissions, electrical layer) remain subject to the
+meter manual; see `docs/STANDARD_CONFORMANCE.md` section 0.
 
 ## Features
 
@@ -27,7 +34,9 @@ simulate a meter reply, decode the reading and validate the byte stream.
   frames and can emit deliberately corrupted streams for conformance testing.
 - A conformance validator that splits a byte stream into frames and reports
   structured findings (stray bytes, bad checksum, bad end, invalid BCD,
-  short replies, undefined function codes), with a one-call `validate_stream` API.
+  short or overlong semantic replies, undefined function codes), while treating
+  the standard wildcard address byte `0xAA` as legal; with a one-call
+  `validate_stream` API.
 - Multi-frame interaction: read-next-data (0x12) frame sequence construction,
   parsing and matching, covering normal / follow-up / abnormal reply semantics.
 - A CLI with `parse`, `validate`, `read`, `commands` and `simulate` subcommands;

@@ -102,7 +102,9 @@ pub fn split_frames(
     // BCD sanity: every address byte must be a valid BCD pair.
     for j = 1; j <= 6; j = j + 1 {
       let b = frame[j]
-      if (b & 0x0F) > 0x09 || ((b >> 4) & 0x0F) > 0x09 {
+      // 0xAA is the standard wildcard byte for read/write-address frames,
+      // so it must not be reported as invalid BCD.
+      if b != 0xAA && ((b & 0x0F) > 0x09 || ((b >> 4) & 0x0F) > 0x09) {
         findings.push({
           offset: i + j,
           severity: "warning",
@@ -143,8 +145,10 @@ pub fn validate_frame(frame : Frame) -> Array[Finding] {
   // A normal read-data reply must echo at least the 4 DI bytes. An
   // abnormal reply instead carries a 1-byte error code and must not be
   // treated as a short reading.
-  if is_reply(frame.control) &&
-    !is_error_reply(frame.control) &&
+  let reply = is_reply(frame.control)
+  let abnormal = is_error_reply(frame.control)
+  if reply &&
+    !abnormal &&
     fc == Command::ReadData.value().to_int() &&
     frame.data.length() < 4 {
     findings.push({
@@ -152,6 +156,53 @@ pub fn validate_frame(frame : Frame) -> Array[Finding] {
       severity: "error",
       code: "short_read_reply",
       message: "read-data reply carries fewer than 4 DI bytes",
+    })
+  }
+  // An abnormal reply carries exactly one error-information byte; it is not
+  // a shortened normal reply and must not be checked as one.
+  if abnormal && frame.data.length() != 1 {
+    findings.push({
+      offset: 10,
+      severity: "error",
+      code: "bad_error_reply_length",
+      message: "abnormal reply must carry exactly one error code byte",
+    })
+  }
+  if reply && !abnormal {
+    if fc == Command::ReadAddress.value().to_int() && frame.data.length() != 6 {
+      findings.push({
+        offset: 10,
+        severity: "error",
+        code: "bad_address_reply_length",
+        message: "read-address reply must carry exactly 6 address bytes",
+      })
+    }
+    if fc == Command::ReadNextData.value().to_int() && frame.data.length() < 6 {
+      findings.push({
+        offset: 10,
+        severity: "error",
+        code: "short_read_next_reply",
+        message: "read-next reply needs DI bytes, value bytes and a sequence byte",
+      })
+    }
+  }
+  // Broadcast time sync is a request-only command; a reply is meaningless.
+  if reply && fc == Command::BroadcastTimeSync.value().to_int() {
+    findings.push({
+      offset: 8,
+      severity: "warning",
+      code: "unexpected_time_sync_reply",
+      message: "broadcast time sync has no reply in DL/T 645-2007",
+    })
+  }
+  if !reply &&
+    fc == Command::BroadcastTimeSync.value().to_int() &&
+    frame.data.length() != 6 {
+    findings.push({
+      offset: 10,
+      severity: "error",
+      code: "bad_time_sync_length",
+      message: "broadcast time sync must carry exactly 6 BCD time bytes",
     })
   }
   findings

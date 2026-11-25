@@ -159,3 +159,26 @@ test "sequence numbers must match between request and reply" {
   assert_true(sequence_matches(req, reply_ok))
   assert_true(!sequence_matches(req, reply_bad))
 }
+
+///|
+test "sequence matching rejects unrelated function codes and mismatched DI" {
+  let addr = hex_decode("18 35 00 10 02 10").unwrap()
+  let req = build_read_next_request(addr, di_voltage(), 0x01)
+  // A read-data command with the same trailing byte is not a read-next pair.
+  let wrong_function = encode_frame(addr, Command::ReadData.value(), [
+    0x00, 0x01, 0x01, 0x02, 0x01,
+  ])
+  assert_true(!sequence_matches(req, wrong_function))
+  // A read-next reply for a different DI must not be accepted either.
+  let wrong_di = encode_frame(addr, read_next_reply(false), [
+    0x00, 0x01, 0x01, 0x03, 0x49, 0x22, 0x01,
+  ])
+  assert_true(!sequence_matches(req, wrong_di))
+  // An abnormal reply is not a valid sequence continuation.
+  let abnormal = encode_frame(
+    addr,
+    abnormal_reply(Command::ReadNextData.value()),
+    [0x04],
+  )
+  assert_true(!sequence_matches(req, abnormal))
+}

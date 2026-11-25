@@ -68,3 +68,54 @@ test "validate_stream: stray byte message shows correct two-digit hex" {
   assert_eq(findings[0].code, "stray_byte")
   assert_eq(findings[0].message, "byte 0x15 outside a frame")
 }
+
+///|
+test "validate_stream: wildcard AA address is legal, not bad BCD" {
+  let (_frames, findings) = validate_stream(build_read_address_request())
+  let (errors, warnings) = count_findings(findings)
+  assert_eq(errors, 0)
+  assert_eq(warnings, 0)
+}
+
+///|
+test "validate_stream: abnormal reply must carry one error byte" {
+  let addr : Array[Byte] = [0x00, 0x01, 0x02, 0x03, 0x04, 0x05]
+  let stream = encode_frame(addr, abnormal_reply(Command::ReadData.value()), [
+    0x04, 0x05,
+  ])
+  let (_frames, findings) = validate_stream(stream)
+  assert_true(findings.map(fn(f) { f.code }).contains("bad_error_reply_length"))
+}
+
+///|
+test "validate_stream: reply data lengths are checked by function" {
+  let addr : Array[Byte] = [0x00, 0x01, 0x02, 0x03, 0x04, 0x05]
+  let bad_address = encode_frame(
+    addr,
+    normal_reply(Command::ReadAddress.value()),
+    [0x00, 0x01],
+  )
+  let bad_next = encode_frame(addr, read_next_reply(false), [
+    0x00, 0x01, 0x01, 0x02, 0x49,
+  ])
+  let (_f1, findings1) = validate_stream(bad_address)
+  let (_f2, findings2) = validate_stream(bad_next)
+  assert_true(
+    findings1.map(fn(f) { f.code }).contains("bad_address_reply_length"),
+  )
+  assert_true(findings2.map(fn(f) { f.code }).contains("short_read_next_reply"))
+}
+
+///|
+test "validate_stream: broadcast time sync has no reply" {
+  let addr : Array[Byte] = [0x00, 0x01, 0x02, 0x03, 0x04, 0x05]
+  let stream = encode_frame(
+    addr,
+    normal_reply(Command::BroadcastTimeSync.value()),
+    [],
+  )
+  let (_frames, findings) = validate_stream(stream)
+  assert_true(
+    findings.map(fn(f) { f.code }).contains("unexpected_time_sync_reply"),
+  )
+}

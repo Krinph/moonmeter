@@ -310,8 +310,24 @@ pub fn sequence_matches(request : Array[Byte], reply : Array[Byte]) -> Bool {
     Ok(f) => f
     Err(_) => return false
   }
-  if req.data.length() < 1 || rep.data.length() < 1 {
+  // Both frames must be the read-next transaction: a master 0x12 request
+  // and a non-abnormal 0x92 / 0xB2 slave reply. Comparing only the last
+  // byte would accept unrelated frames that happen to share that byte.
+  if is_reply(req.control) ||
+    function_code(req.control) != Command::ReadNextData.value().to_int() ||
+    !is_reply(rep.control) ||
+    is_error_reply(rep.control) ||
+    function_code(rep.control) != Command::ReadNextData.value().to_int() {
     return false
   }
-  req.data[req.data.length() - 1] == rep.data[rep.data.length() - 1]
+  if req.data.length() != 5 || rep.data.length() < 6 {
+    return false
+  }
+  // The reply must echo the requested DI in the same wire order.
+  for i = 0; i < 4; i = i + 1 {
+    if req.data[i] != rep.data[i] {
+      return false
+    }
+  }
+  req.data[4] == rep.data[rep.data.length() - 1]
 }
