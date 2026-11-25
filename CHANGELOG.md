@@ -3,6 +3,31 @@
 All notable changes to moonmeter are documented here. This project follows
 semantic versioning.
 
+## 0.3.0 — Full DL/T 645-2007 conformance
+
+Extended from the read-data subset to the complete application layer in
+response to review feedback that a single-frame reading case cannot establish
+the standard's full interaction semantics.
+
+### Added
+
+- Request builders for all twelve standard function codes: broadcast time
+  sync, read data, read-next data, read/write address, write data, freeze,
+  change baud rate, change password, and clear max-demand / meter / events.
+- Reply-control helpers: normal `9x`, follow-up `Bx`, abnormal `Dx`, plus
+  `describe_reply` reporting direction / abnormal / follow-up / function /
+  error code in one call.
+- Multi-frame interaction: read-next-data (0x12) sequence numbers (1..255),
+  `NextReading` parse result and `sequence_matches` verification.
+- CLI `commands` subcommand printing all function codes and reply controls;
+  `parse` now shows the reply interaction state (final / follow-up / abnormal).
+- `docs/STANDARD_CONFORMANCE.md` section 3.5: a session-level case covering
+  read address -> read data with follow-up -> read-next with matching sequence
+  -> abnormal reply, each frame byte-for-byte golden-tested.
+- Broadcast time sync now transmits time low byte first (SS MM HH DD MM YY)
+  per the standard.
+- Test suite expanded from 44 to 56 tests.
+
 ## 0.2.1 — DL/T 645-2007 conformance fix
 
 Corrected the protocol implementation to match the DL/T 645-2007 standard

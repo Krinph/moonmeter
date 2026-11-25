@@ -4,18 +4,20 @@
 
 moonmeter 是 MoonBit 生态中**首个** DL/T 645（中国多功能电能表通信规约）实现。它把一次完整抄读闭环搬到代码里：**构造标准请求帧 → 编码 → 模拟电表应答 → 解码 → 格式化 → 一致性校验**，无需硬件即可开发、测试和验证基于该规约的抄表、计费与充电桩系统。
 
-当前版本 `0.2.1`（MVP + 规约符合性更正）：核心协议能力、库 + CLI + 可运行示例、44 项测试与三平台 CI 均已就绪。协议实现严格遵循 DL/T 645-2007 的帧格式、控制码与数据标识定义；逐字节报文案例与符合性边界见 [docs/STANDARD_CONFORMANCE.md](docs/STANDARD_CONFORMANCE.md)。
+当前版本 `0.3.0`：以 **DL/T 645-2007 完整标准符合性**为目标，覆盖全部十二项功能码与完整交互语义（三种应答控制码、多帧后续、帧序号、异常应答），库 + CLI + 可运行示例、56 项测试与三平台 CI 均已就绪。逐字节单帧案例与会话级完整交互案例见 [docs/STANDARD_CONFORMANCE.md](docs/STANDARD_CONFORMANCE.md)。
 
 ## Features
 
+- 🧩 **完整标准符合性**：实现 DL/T 645-2007 第 7 章全部十二项功能码（广播校时、读/写数据、读后续数据、读/写地址、冻结、改速率、改密码、三类清零）与三种应答控制码（正常 9x / 有后续 Bx / 异常 Dx）；
 - 🔤 **帧编解码**：`68H` 起始符、6 字节 BCD 地址域、控制码、**单字节长度 L**、**+33H 数据域编码**、累加和校验（CS）、`16H` 结束符；
+- 🔗 **多帧交互**：读后续数据 `0x12` 帧序号（1~255）构造/解析/一致性校验，覆盖"请求 → 应答 → 后续帧 → 异常应答"完整会话语义；
 - 🔢 **BCD 编解码与地址校验**：地址、时间戳与电量读数的 BCD 编解码（低字节在前）；12 位地址的合法性校验与字节/字符串互转；
 - 📖 **数据标识（DI）目录**：正向有功总/尖/峰/平/谷电能、电压、电流、功率（DI3DI2DI1DI0），附标准名称、单位与小数位；
 - ⚠️ **错误应答解码**：把电表的 `0xD1` 异常应答帧解码为结构化错误码（密码错、控制码错、数据标识错、长度错、地址错等）；
 - 💡 **电量格式化**：把 BCD 寄存器原始值按 DI 小数位格式化为定点小数（如 `1234.56 kWh`）；
 - 💡 **电表模拟器**：`MeterSim` 可注册任意读数并按标准应答读数据请求（`0x91` 应答帧），也可生成带错误（坏校验/坏结束符）的测试帧流；
 - 🔍 **一致性校验器**：把字节流切分为帧并报告 `stray_byte` / `bad_checksum` / `bad_end` / `truncated_frame` / `short_read_reply` / `unknown_function` 等结构化诊断；提供一步到位的 `validate_stream` API 与错误/警告计数；
-- 🖥️ **CLI**：`parse` / `validate` / `read` / `simulate` 四个子命令，离线调试无需硬件；
+- 🖥️ **CLI**：`parse` / `validate` / `read` / `commands` / `simulate` 五个子命令，`commands` 可现场打印全部功能码与应答控制码，离线调试无需硬件；
 - 📚 **库 + CLI + 可运行示例**三层交付。
 
 ## 典型使用场景
@@ -45,6 +47,9 @@ moon run cmd/main -- parse "68 12 90 78 56 34 12 68 91 08 33 33 34 33 89 67 45 3
 
 # 校验标准应答字节流（合法帧 → all good；如需观察诊断输出，可改用损坏帧）
 moon run cmd/main -- validate "68 12 90 78 56 34 12 68 91 08 33 33 34 33 89 67 45 33 54 16"
+
+# 打印全部十二项功能码与三种应答控制码
+moon run cmd/main -- commands
 ```
 
 ### Runnable example
@@ -103,13 +108,14 @@ let (errors, warnings) = @moonmeter.count_findings(findings)
 - 地址域 6 字节 BCD（低字节在前）；数据标识按 DI0,DI1,DI2,DI3 传输（标准书写为 DI3DI2DI1DI0）；
 - 控制码：`D7` 方向（0 主站命令 / 1 从站应答）、`D6` 异常、`D5` 后续帧、`D4~D0` 功能码；读数据 `0x11`、正常应答 `0x91`、异常应答 `0xD1`；
 - 功能码按标准为离散定义（08H、11H~1BH），非连续编号；
-- 645 帧无加密位，本实现覆盖明文帧。完整报文案例见 [STANDARD_CONFORMANCE.md](docs/STANDARD_CONFORMANCE.md)。
+- 应答控制码：正常 `9x` / 有后续 `Bx` / 异常 `Dx`；读后续数据帧序号 1~255 请求应答一致。
+- 645 帧无加密位，本实现覆盖明文帧。单帧与会话级完整报文案例见 [STANDARD_CONFORMANCE.md](docs/STANDARD_CONFORMANCE.md)。
 
 ## Development
 
 ```text
 moon check --deny-warn
-moon test      # 44 项测试：帧往返、+33H、校验、BCD、地址、DI、命令码、错误应答、格式化、模拟器、校验器、黄金报文
+moon test      # 56 项测试：帧往返、+33H、校验、BCD、地址、DI、十二功能码、多帧序号、错误应答、格式化、模拟器、校验器、黄金报文
 moon fmt --check
 moon info      # 公开接口见 pkg.generated.mbti
 moon run cmd/roundtrip

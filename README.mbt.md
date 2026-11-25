@@ -3,9 +3,11 @@
 DL/T 645-2007 electricity meter communication protocol stack for MoonBit,
 conformant to the Chinese multi-function energy meter standard.
 
-`moonmeter` provides a complete, hardware-free round trip for smart-meter
-reading: build a standard request frame (control `0x11`), simulate a meter
-reply (`0x91`), decode the reading and validate the byte stream.
+`moonmeter` targets full DL/T 645-2007 conformance: all twelve application-layer
+function codes (08H, 11H..1BH), the three reply-control families (normal `9x`,
+follow-up `Bx`, abnormal `Dx`), multi-frame read-next transfers with sequence
+numbers, and a complete hardware-free round trip: build a standard request,
+simulate a meter reply, decode the reading and validate the byte stream.
 
 ## Features
 
@@ -26,7 +28,10 @@ reply (`0x91`), decode the reading and validate the byte stream.
 - A conformance validator that splits a byte stream into frames and reports
   structured findings (stray bytes, bad checksum, bad end, invalid BCD,
   short replies, undefined function codes), with a one-call `validate_stream` API.
-- A CLI with `parse`, `validate`, `read` and `simulate` subcommands.
+- Multi-frame interaction: read-next-data (0x12) frame sequence construction,
+  parsing and matching, covering normal / follow-up / abnormal reply semantics.
+- A CLI with `parse`, `validate`, `read`, `commands` and `simulate` subcommands;
+  `commands` prints all function codes and reply control bytes.
 
 ## Quick start
 
@@ -56,6 +61,7 @@ CLI:
 moon run cmd/main -- --address 129078563412 read
 moon run cmd/main -- parse "68 12 90 78 56 34 12 68 91 08 33 33 34 33 89 67 45 33 54 16"
 moon run cmd/main -- simulate
+moon run cmd/main -- commands
 moon run cmd/main -- validate "68 12 90 78 56 34 12 68 91 08 33 33 34 33 89 67 45 33 54 16"
 ```
 
