@@ -31,12 +31,14 @@ pub fn build_time_sync(
   hhmmss : Int32,
 ) -> Array[Byte] {
   let data : Array[Byte] = []
-  data.push(bcd_from(yymmdd / 10000 % 100))
-  data.push(bcd_from(yymmdd / 100 % 100))
-  data.push(bcd_from(yymmdd % 100))
-  data.push(bcd_from(hhmmss / 10000 % 100))
-  data.push(bcd_from(hhmmss / 100 % 100))
+  // Per the standard, time is transmitted low byte first (SS MM HH DD MM YY).
+  // Example: 21-12-29 17:05:30 -> 30 05 17 29 12 21 before +0x33.
   data.push(bcd_from(hhmmss % 100))
+  data.push(bcd_from(hhmmss / 100 % 100))
+  data.push(bcd_from(hhmmss / 10000 % 100))
+  data.push(bcd_from(yymmdd % 100))
+  data.push(bcd_from(yymmdd / 100 % 100))
+  data.push(bcd_from(yymmdd / 10000 % 100))
   encode_frame(address, Command::BroadcastTimeSync.value(), data)
 }
 

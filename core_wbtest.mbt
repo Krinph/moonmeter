@@ -99,12 +99,13 @@ test "commands: broadcast time sync uses control 0x08" {
   let frame = decode_frame(sync).unwrap()
   assert_eq(frame.control, 0x08)
   assert_eq(frame.data.length(), 6)
-  assert_eq(bcd_to(frame.data[0]), 26)
-  assert_eq(bcd_to(frame.data[1]), 11)
-  assert_eq(bcd_to(frame.data[2]), 18)
-  assert_eq(bcd_to(frame.data[3]), 09)
-  assert_eq(bcd_to(frame.data[4]), 30)
-  assert_eq(bcd_to(frame.data[5]), 12)
+  // Standard time field is low byte first: SS MM HH DD MM YY.
+  assert_eq(bcd_to(frame.data[0]), 12)
+  assert_eq(bcd_to(frame.data[1]), 30)
+  assert_eq(bcd_to(frame.data[2]), 09)
+  assert_eq(bcd_to(frame.data[3]), 18)
+  assert_eq(bcd_to(frame.data[4]), 11)
+  assert_eq(bcd_to(frame.data[5]), 26)
 }
 
 ///|

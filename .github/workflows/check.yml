@@ -48,6 +48,7 @@ jobs:
 
       - name: cli smoke test
         run: |
+          moon run cmd/main -- commands | grep -q "0xD1"
           moon run cmd/main -- read | grep -q "68 11 04 33 33 34 33"
           moon run cmd/main -- simulate | grep -q "91"
           moon run cmd/main -- validate "68 12 90 78 56 34 12 68 91 08 33 33 34 33 89 67 45 33 54 16" | grep -q "all good"

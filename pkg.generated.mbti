@@ -16,6 +16,8 @@ pub const FrameEnd : Byte = 0x16
 
 pub const FrameStart : Byte = 0x68
 
+pub fn abnormal_reply(Byte) -> Byte
+
 pub fn abnormal_reply_control(Byte) -> Byte
 
 pub fn address_from_digits(String) -> Array[Byte]?
@@ -30,9 +32,31 @@ pub fn bcd_from(Int32) -> Byte
 
 pub fn bcd_to(Byte) -> Int32
 
+pub fn broadcast_address() -> Array[Byte]
+
+pub fn build_change_baud_request(Array[Byte], Byte) -> Array[Byte]
+
+pub fn build_change_password_request(Array[Byte], DataId, Array[Byte], Array[Byte]) -> Array[Byte]
+
+pub fn build_clear_events_request(Array[Byte], Array[Byte], Array[Byte], DataId) -> Array[Byte]
+
+pub fn build_clear_max_demand_request(Array[Byte], Array[Byte], Array[Byte]) -> Array[Byte]
+
+pub fn build_clear_meter_request(Array[Byte], Array[Byte], Array[Byte]) -> Array[Byte]
+
+pub fn build_freeze_request(Array[Byte], Int32, Int32, Int32, Int32) -> Array[Byte]
+
+pub fn build_read_address_request() -> Array[Byte]
+
+pub fn build_read_next_request(Array[Byte], DataId, Byte) -> Array[Byte]
+
 pub fn build_read_request(Array[Byte], DataId) -> Array[Byte]
 
 pub fn build_time_sync(Array[Byte], Int32, Int32) -> Array[Byte]
+
+pub fn build_write_address_request(Array[Byte]) -> Array[Byte]
+
+pub fn build_write_data_request(Array[Byte], DataId, Array[Byte], Array[Byte], Array[Byte]) -> Array[Byte]
 
 pub fn checksum(ArrayView[Byte]) -> Byte
 
@@ -43,6 +67,8 @@ pub fn decode_energy(Array[Byte], Int32) -> (Int32, Int32)
 pub fn decode_error_reply(Frame) -> ErrorCode?
 
 pub fn decode_frame(Array[Byte]) -> Result[Frame, FrameError]
+
+pub fn describe_reply(Frame) -> ReplyInfo
 
 pub fn di_active_flat() -> DataId
 
@@ -66,6 +92,8 @@ pub fn di_voltage() -> DataId
 
 pub fn encode_frame(Array[Byte], Byte, Array[Byte]) -> Array[Byte]
 
+pub fn follow_up_reply(Byte) -> Byte
+
 pub fn format_energy(Int32, Int32) -> String
 
 pub fn function_code(Byte) -> Int32
@@ -82,13 +110,23 @@ pub fn is_error_reply(Byte) -> Bool
 
 pub fn is_reply(Byte) -> Bool
 
+pub fn normal_reply(Byte) -> Byte
+
 pub fn normal_reply_control(Byte) -> Byte
 
 pub fn offset_data(ArrayView[Byte]) -> Array[Byte]
 
+pub fn parse_next_reading(Array[Byte]) -> NextReading?
+
 pub fn parse_reading(Array[Byte]) -> Reading?
 
+pub fn read_next_reply(Bool) -> Byte
+
 pub fn render_findings(Array[Finding]) -> String
+
+pub fn reply_control(Byte, Bool, Bool) -> Byte
+
+pub fn sequence_matches(Array[Byte], Array[Byte]) -> Bool
 
 pub fn split_frames(Array[Byte]) -> (Array[Array[Byte]], Array[Finding])
 
@@ -99,6 +137,8 @@ pub fn valid_address(ArrayView[Byte]) -> Bool
 pub fn validate_frame(Frame) -> Array[Finding]
 
 pub fn validate_stream(Array[Byte]) -> (Array[Frame], Array[Finding])
+
+pub fn wildcard_address() -> Array[Byte]
 
 // Errors
 
@@ -178,9 +218,23 @@ pub fn MeterSim::generate_stream(Self, Bool) -> Array[Byte]
 pub fn MeterSim::new(Array[Byte]) -> Self
 pub fn MeterSim::set_reading(Self, DataId, Array[Byte]) -> Unit
 
+pub struct NextReading {
+  di : DataId
+  value : Array[Byte]
+  seq : Byte
+}
+
 pub struct Reading {
   di : DataId
   value : Array[Byte]
+}
+
+pub struct ReplyInfo {
+  command : Command?
+  control : Byte
+  abnormal : Bool
+  follow_up : Bool
+  error : ErrorCode?
 }
 
 // Type aliases

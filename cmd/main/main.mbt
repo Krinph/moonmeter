@@ -5,6 +5,7 @@
 ///   parse <hex>       decode one DL/T 645-2007 frame and print its structure
 ///   validate <hex>    split a stream and report conformance findings
 ///   read              build a read-data request (0x11, DI=00010000)
+///   commands          list all twelve standard function codes and reply controls
 ///   simulate          print a synthetic meter stream (two readings)
 ///   simulate --bad    print a stream with a corrupted ending byte
 
@@ -13,7 +14,7 @@ fn main {
   let cmd = @argparse.Command::Command(
     "moonmeter",
     about="DL/T 645-2007 electricity meter protocol toolkit",
-    version="0.2.1",
+    version="0.3.0",
     arg_required_else_help=true,
     options=[
       @argparse.OptionArg::OptionArg(
@@ -61,6 +62,10 @@ fn main {
         about="build a read-data request frame (0x11, DI 00010000)",
       ),
       @argparse.Command::Command(
+        "commands",
+        about="list all twelve standard function codes and their reply controls",
+      ),
+      @argparse.Command::Command(
         "simulate",
         about="print a synthetic meter stream",
         flags=[
@@ -97,6 +102,7 @@ fn run(matches : @argparse.Matches) -> Unit {
       let addr_hex = matches.values.get("address").unwrap_or(["000102030405"])[0]
       cmd_read(addr_hex)
     }
+    Some(("commands", _)) => cmd_commands()
     Some(("simulate", sub)) => {
       let addr_hex = matches.values.get("address").unwrap_or(["000102030405"])[0]
       let bad = sub.flags.get("bad").unwrap_or(false)
@@ -133,8 +139,18 @@ fn cmd_parse(hex : String) -> Unit {
       println(
         "  function: " +
         @moonmeter.function_code(f.control).to_string() +
-        (if @moonmeter.is_reply(f.control) { " (reply)" } else { "" }),
+        (if @moonmeter.is_reply(f.control) { " (reply)" } else { " (command)" }),
       )
+      if @moonmeter.is_reply(f.control) {
+        let state = if @moonmeter.is_error_reply(f.control) {
+          "abnormal"
+        } else if @moonmeter.has_follow_up(f.control) {
+          "normal, follow-up"
+        } else {
+          "normal, final"
+        }
+        println("  state   : " + state)
+      }
       println("  data    : " + @moonmeter.hex_encode(f.data))
       match @moonmeter.parse_reading(f.data) {
         Some(reading) =>
@@ -214,6 +230,33 @@ fn cmd_read(addr_hex : String) -> Unit {
   }
   let req = @moonmeter.build_read_request(addr, @moonmeter.di_active_total())
   println(@moonmeter.hex_encode(req))
+}
+
+///|
+/// List all twelve DL/T 645-2007 function codes with their master command
+/// byte and the three slave reply control bytes (normal / follow-up /
+/// abnormal). This makes the full standard command set inspectable offline.
+fn cmd_commands() -> Unit {
+  println(
+    "DL/T 645-2007 function codes (master -> reply normal/follow/abnormal):",
+  )
+  // Master function codes: 08H, 11H..1BH (intentionally non-contiguous).
+  let functions : Array[Byte] = [
+    0x08, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1A, 0x1B,
+  ]
+  for f in functions {
+    println(
+      "  0x" +
+      @moonmeter.hex_byte(f) +
+      "  ->  0x" +
+      @moonmeter.hex_byte(@moonmeter.normal_reply(f)) +
+      " / 0x" +
+      @moonmeter.hex_byte(@moonmeter.follow_up_reply(f)) +
+      " / 0x" +
+      @moonmeter.hex_byte(@moonmeter.abnormal_reply(f)),
+    )
+  }
+  println("broadcast time sync (0x08) has no reply by standard")
 }
 
 ///|
