@@ -3,6 +3,21 @@
 All notable changes to moonmeter are documented here. This project follows
 semantic versioning.
 
+## Unreleased
+
+### CI
+
+- `check.yml` now runs `moon check --target all --deny-warn`, adds an explicit
+  `moon build --target all` step, and runs `moon test --target all`, covering
+  check / build / test across wasm, wasm-gc, js and native on all three OSes.
+
+### Docs
+
+- Added `docs/ACCEPTANCE.md`: a nine-point acceptance self-check matrix against
+  the official completion-support requirements, with reproducible local evidence
+  and the mooncakes.io publishing steps (the single remaining action item).
+- Linked the acceptance matrix from the README.
+
 ## 0.3.1 — Validator precision and standard-currency check
 
 ### Fixed

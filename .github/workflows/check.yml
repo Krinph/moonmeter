@@ -33,13 +33,17 @@ jobs:
           moon version --all
           moon update
 
-      - name: moon check
+      - name: moon check (all targets)
         run: |
-          moon check --deny-warn
+          moon check --target all --deny-warn
 
-      - name: moon test
+      - name: moon build (all targets)
         run: |
-          moon test
+          moon build --target all
+
+      - name: moon test (all targets)
+        run: |
+          moon test --target all
 
       - name: lint
         run: |
