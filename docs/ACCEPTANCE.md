@@ -2,7 +2,7 @@
 
 本文对照《2026 MoonBit 国产基础软件开源大赛章程》阶段三"项目验收"的九条要求，
 以及 8 月黑客松活动说明第六节的验收要求，逐条给出本地可复现的证据。
-核查日期：**2026-11-26**。状态分为 `已满足`、`待发布`；结论只陈述可验证事实。
+核查日期：**2026-11-26**。九条要求现已全部满足，包已于 2026-11-26 发布到 mooncakes.io。结论只陈述可验证事实。
 
 ## 一、九条硬性要求逐条自查
 
@@ -14,14 +14,13 @@
 | 4 | 使用 CI 且覆盖检查、构建、测试流程 | 已满足 | `.github/workflows/check.yml`：Ubuntu/macOS/Windows 三平台，`moon check --target all --deny-warn`、`moon build --target all`、`moon test --target all`，另含 fmt/info 接口漂移检查与 CLI 冒烟 |
 | 5 | 至少一个可运行示例 | 已满足 | `cmd/roundtrip`：构造请求 → 模拟电表 → 解码 → 格式化 → 校验，输出 `1234.56 kWh`；`moon run cmd/roundtrip` |
 | 6 | 完整测试覆盖核心功能 | 已满足 | 61 项测试，12 功能码与多帧会话逐字节黄金用例；四后端（wasm/wasm-gc/js/native）全通过 |
-| 7 | 发布到 mooncakes.io | **待发布** | `moon.mod` 元数据完整（见第二节），但 `moon publish --dry-run` 提示需先 `moon login`；须由账号持有人执行发布 |
+| 7 | 发布到 mooncakes.io | 已满足 | `moon publish` 返回 `Server status: 200 OK`（2026-11-26）；`moon search Krinph/moonmeter` 返回 `Krinph/moonmeter@0.3.1`，文档页 `https://mooncakes.io/docs/Krinph/moonmeter` 可访问 |
 | 8 | 采用 OSI 认可的开源许可证 | 已满足 | 根目录 `LICENSE`，Apache-2.0（OSI 认可）；原创实现，未复制第三方源代码，见申报书"原创与参考说明" |
 | 9 | 完成度覆盖申报书核心承诺 | 已满足 | 申报书承诺的 12 功能码、三种应答控制码、多帧序号、DI 目录、模拟器、错误解码、一致性校验器、CLI、示例均已实现并测试；见 `docs/PROJECT_PROPOSAL.md` |
 
-**结论**：九条中八条已满足并可本地复现；第 7 条 mooncakes.io 发布需账号持有人登录后执行，
-是提交验收前的唯一待办项。
+**结论**：九条要求全部满足，可提交验收。
 
-## 二、mooncakes.io 发布前置检查（均已就绪）
+## 二、mooncakes.io 发布记录
 
 `moon.mod` 已具备发布所需元数据：
 
@@ -40,8 +39,10 @@ moon publish --dry-run                      # 确认无报错
 moon publish                                # 正式发布 0.3.1
 ```
 
-发布成功后可用 `moon add Krinph/moonmeter` 拉取，或访问
-`https://mooncakes.io/docs/Krinph/moonmeter` 确认包文档可见。
+**发布结果（2026-11-26）**：正式 `moon publish` 返回 `Server status: 200 OK`；
+`moon search Krinph/moonmeter` 可见 `Krinph/moonmeter@0.3.1`；
+`https://mooncakes.io/docs/Krinph/moonmeter` 返回 HTTP 200，包文档可访问。
+`moon add Krinph/moonmeter` 可拉取该版本。
 
 ## 三、工程加分项（优秀项目评选参考项，非硬性）
 

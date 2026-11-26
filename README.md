@@ -128,9 +128,9 @@ CI 在 Ubuntu / macOS / Windows 三平台、四个后端（wasm / wasm-gc / js /
 
 ## 验收状态
 
-对照官方完成支持（350 元）的九条要求，本项目八条已满足并可本地复现；唯一待办是
-**发布到 mooncakes.io**（需账号持有人执行 `moon login` 后 `moon publish`）。逐条证据、
-发布前置检查与一键复现命令见 [docs/ACCEPTANCE.md](docs/ACCEPTANCE.md)。
+对照官方完成支持（350 元）的九条要求，本项目**全部满足**：包已发布到 mooncakes.io
+（`Krinph/moonmeter@0.3.1`，`moon publish` 返回 `200 OK`），其余八条均可本地复现。
+逐条证据、发布记录与一键复现命令见 [docs/ACCEPTANCE.md](docs/ACCEPTANCE.md)。
 
 ## 与现有工具的关系
 

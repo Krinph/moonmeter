@@ -15,8 +15,10 @@ semantic versioning.
 
 - Added `docs/ACCEPTANCE.md`: a nine-point acceptance self-check matrix against
   the official completion-support requirements, with reproducible local evidence
-  and the mooncakes.io publishing steps (the single remaining action item).
+  and the mooncakes.io publishing record.
 - Linked the acceptance matrix from the README.
+- Published `Krinph/moonmeter@0.3.1` to mooncakes.io (`moon publish` returned
+  `200 OK`); all nine acceptance requirements are now satisfied.
 
 ## 0.3.1 — Validator precision and standard-currency check
 
